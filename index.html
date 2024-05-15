@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-do-App</title>
+    <style>
+        /* Grundlegende Stile für Aufgabenelemente */
+        .task {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid black;
+            border-radius: 8px;
+        }
+        /* Stile für erledigte Aufgaben */
+        .completed {
+            background-color: #90EE90; 
+            color: rgb(0, 0, 0);
+        }
+        /* Stile für gelöschte Aufgaben, nicht aktiv verwendet */
+        .deleted {
+            background-color: #FF6347; 
+            color: white;
+        }
+        /* Stile für verschobene Aufgaben */
+        .postponed {
+            background-color: #ddda12; 
+            color: rgb(0, 0, 0);
+        }
+        /* Grundlegender Style für Buttons */
+        button {
+            margin-left: 10px;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        /* Spezifischer Button-Style für verschiedene Aktionen */
+        .ok-button {
+            background-color: #4CAF50; 
+            color: white;
+        }
+        .delete-button {
+            background-color: #f44336; 
+            color: white;
+        }
+        .postpone-button {
+            background-color: #dbd818; 
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>To-do-Liste von Marc Kiefer</h1>
+        <!-- Dropdown-Menü zur Filterauswahl -->
+        <select v-model="filter">
+            <option value="all">Alle</option>
+            <option value="completed">Erledigt</option>
+            <option value="notCompleted">Nicht erledigt</option>
+            <option value="postponed">Verschoben</option>
+        </select>
+        <!-- Eingabefeld für neue Aufgaben -->
+        <input v-model="newTask" @keyup.enter="addTask" placeholder="Neue Aufgabe hinzufügen">
+        <!-- Dropdown-Menü zur Prioritätsauswahl -->
+        <select v-model="newTaskPriority">
+            <option value="low">Niedrig</option>
+            <option value="medium">Mittel</option>
+            <option value="high">Hoch</option>
+        </select>
+        <!-- Listendarstellung der Aufgaben basierend auf dem Filterstatus -->
+        <li v-for="(task, index) in filteredTasks" :key="index" :class="{'task': true, 'completed': task.completed, 'postponed': task.postponed}">
+            {{ task.description }}
+            <!-- Aktionstasten für verschiedene Aufgabenstatus -->
+            <button @click="toggleCompleted(index)" class="ok-button">&#10003;</button>
+            <button @click="postponeTask(index)" class="postpone-button">?</button>
+            <button @click="deleteTask(index)" class="delete-button">&#10006;</button>
+        </li>
+        <h2>Noch zu erledigen</h2>
+        <ul>
+            <li v-for="(task, index) in tasks.filter(t => !t.completed && !t.postponed)" :key="index" class="task">
+                {{ task.description }}
+                <button @click="toggleCompleted(index)" class="ok-button">&#10003;</button>
+                <button @click="postponeTask(index)" class="postpone-button">?</button>
+                <button @click="deleteTask(index)" class="delete-button">&#10006;</button>
+            </li>
+        </ul>
+        <h2>Verschoben</h2>
+        <ul>
+            <li v-for="(task, index) in tasks.filter(t => t.postponed)" :key="index" class="task postponed">
+                {{ task.description }}
+                <button @click="toggleCompleted(index)" class="ok-button">&#10003;</button>
+                <button @click="deleteTask(index)" class="delete-button">&#10006;</button>
+            </li>
+        </ul>
+        <h2>Erledigt</h2>
+        <ul>
+            <li v-for="(task, index) in tasks.filter(t => t.completed)" :key="index" class="task completed">
+                {{ task.description }}
+                <button @click="deleteTask(index)" class="delete-button">&#10006;</button>
+            </li>
+        </ul>
+    </div>
+
+    <script src="script/vue.js"></script>
+    <script>
+        Vue.createApp({
+            data() {
+                return {
+                    newTask: '',
+                    newTaskPriority: 'medium',
+                    tasks: [],
+                    filter: 'all' // Initialfilter auf "Alle"
+                };
+            },
+            computed: {
+                // Berechnete Eigenschaft zur Filterung der Aufgabenliste
+                filteredTasks() {
+                    switch (this.filter) {
+                        case 'completed':
+                            return this.tasks.filter(task => task.completed);
+                        case 'notCompleted':
+                            return this.tasks.filter(task => !task.completed && !task.postponed);
+                        case 'postponed':
+                            return this.tasks.filter(task => task.postponed);
+                        default:
+                            return this.tasks;
+                    }
+                }
+            },
+            methods: {
+                // Methode zum Hinzufügen einer neuen Aufgabe
+                addTask() {
+                    if (this.newTask.trim()) {
+                        this.tasks.push({ description: this.newTask, priority: this.newTaskPriority, completed: false, postponed: false });
+                        this.newTask = '';
+                        this.newTaskPriority = 'medium';
+                    }
+                },
+                // Methode zum Umschalten des Erledigt-Status
+                toggleCompleted(index) {
+                    this.tasks[index].completed = !this.tasks[index].completed;
+                    this.tasks[index].postponed = false; 
+                },
+                // Methode zum Löschen einer Aufgabe
+                deleteTask(index) {
+                    this.tasks.splice(index, 1);
+                },
+                // Methode zum Verschieben einer Aufgabe
+                postponeTask(index) {
+                    this.tasks[index].postponed = !this.tasks[index].postponed;
+                    this.tasks[index].completed = false; 
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
